@@ -14,7 +14,7 @@ def memory(env, ram, cpu, name, space_process, inst_process, tiempo_instruccion)
     # estado new -> entra en cola de la ram
     with ram.get(space_process) as espacio:
          yield espacio
-         print('%s se le ha asignado espacio en memoria, pasara a estado ready. Utiliza %d de espacio' %(name, space_process))         
+         print('%s se le ha asignado espacio en memoria, pasara a estado ready. Utiliza %.2f de espacio' %(name, space_process))         
          # si ya se obtuvo espacio entonces pasa a estado de ready
     
     # estado ready -> se solicita el cpu si puede atender este proceso
@@ -33,7 +33,7 @@ def memory(env, ram, cpu, name, space_process, inst_process, tiempo_instruccion)
     ram.put(space_process)
     tiempoTotal = env.now - tiempoInicio
     totalTiempoProcesos.append(tiempoTotal)
-    print("Ha tomado %d hacer %s proceso" %(tiempoTotal, name))
+    print("Ha tomado %.2f hacer el proceso %s" %(tiempoTotal, name))
     
 """IMPORTACIONES"""    
 import simpy
@@ -60,4 +60,4 @@ for i in totalTiempoProcesos:
     suma+=i
 stDev = np.std(totalTiempoProcesos)
 
-print("La media de %d procesos es %d con una desviación estándar de %d" %(processes, suma/processes, stDev))
+print("La media de %d procesos es %.2f con una desviación estándar de %.2f" %(processes, suma/processes, stDev))
