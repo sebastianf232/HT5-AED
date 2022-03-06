@@ -42,9 +42,11 @@ env = simpy.Environment() # Ambiente
 RAM = simpy.Container(env, init=100, capacity=100) # la capacidad de la RAM
 CPU = simpy.Resource(env,capacity = 1) # La capacidad del CPU
 
+random.seed(1) # fijar el inicio de random
+
 for i in range(5): #aquí se coloca la cantidad de procesos
     newProceso = random.expovariate(1.0/10) # espacio en memoria entre 1 y 10 de cantidad a solicitar
     cantInstrucciones = random.expovariate(1.0/10) # instrucciones entre 1 y 10 de cantidad a solicitar
     env.process(memory(env,RAM, CPU, 'Proceso %d' %i, newProceso, cantInstrucciones, 3)) # se realiza el proceso
-                                                                                # el 3 es porque realiza tres instrucciones
+                                                                                         # el 3 es porque realiza tres instrucciones, este número puede variar
 env.run() 
