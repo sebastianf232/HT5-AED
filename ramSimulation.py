@@ -9,6 +9,7 @@
         tiempo_intruccion -> es la cantidad de instrucciones que realiza el cpu
 """
 def memory(env, ram, cpu, name, space_process, inst_process, tiempo_instruccion):
+    global totalTiempoProcesos # servirá para hacer el promedio 
     tiempoInicio = env.now # tiempo en el que inicia el proceso
     # estado new -> entra en cola de la ram
     with ram.get(space_process) as espacio:
@@ -31,22 +32,32 @@ def memory(env, ram, cpu, name, space_process, inst_process, tiempo_instruccion)
     # finalizando el proceso
     ram.put(space_process)
     tiempoTotal = env.now - tiempoInicio
+    totalTiempoProcesos.append(tiempoTotal)
     print("Ha tomado %d hacer %s proceso" %(tiempoTotal, name))
     
 """IMPORTACIONES"""    
 import simpy
 import random
+import numpy as np # servirá para sacar la desviación estándar 
 
 """VARIABLES"""  
 env = simpy.Environment() # Ambiente
 RAM = simpy.Container(env, init=100, capacity=100) # la capacidad de la RAM
 CPU = simpy.Resource(env,capacity = 1) # La capacidad del CPU
-
 random.seed(1) # fijar el inicio de random
-
-for i in range(5): #aquí se coloca la cantidad de procesos
+processes = 25  # fijar cantidad de procesos, deben de ser 5,50,100,150 y 200
+totalTiempoProcesos = [] # se guardan los datos 
+for i in range(processes): #aquí se coloca la cantidad de procesos
     newProceso = random.expovariate(1.0/10) # espacio en memoria entre 1 y 10 de cantidad a solicitar
     cantInstrucciones = random.expovariate(1.0/10) # instrucciones entre 1 y 10 de cantidad a solicitar
     env.process(memory(env,RAM, CPU, 'Proceso %d' %i, newProceso, cantInstrucciones, 3)) # se realiza el proceso
                                                                                          # el 3 es porque realiza tres instrucciones, este número puede variar
 env.run() 
+
+"""ESTADÍSTICOS"""
+suma=0
+for i in totalTiempoProcesos:
+    suma+=i
+stDev = np.std(totalTiempoProcesos)
+
+print("La media de %d procesos es %d con una desviación estándar de %d" %(processes, suma/processes, stDev))
