@@ -4,16 +4,16 @@ import random      # numeros random
 import numpy as np # servirá para sacar la desviación estándar 
 
 """VARIABLES ARBITRARIAS"""
-ramCapacity = 100  # cantidad de espacio
+ramCapacity = 10  # cantidad de espacio
 cpuCapacity = 1
-processes = 25  # fijar cantidad de procesos, deben de ser 5,50,100,150 y 200
+processes = 5  # fijar cantidad de procesos, deben de ser 25,50,100,150 y 200
 instCPU = 3     # puede cambiar a 3, 5 o 6
 
 """-----------------MÉTODOS------------------"""
 """ hace la simulacion de una memoria RAM
     recibe como parametros:
         env -> ambiente de trabajo
-        ram -> el espacio de la ram 100GB
+        ram -> es la cola con una determinada capacidad
         cpu -> procesador de recursos con capacidad indicada
         name -> nombre del proceso
         space_process -> espacio de memoria que requiere el proceso
@@ -24,28 +24,45 @@ def memory(env, ram, cpu, name, space_process, inst_process, tiempo_instruccion)
     global totalTiempoProcesos # servirá para hacer el promedio 
     tiempoInicio = env.now # tiempo en el que inicia el proceso
     # estado new -> entra en cola de la ram
-    with ram.get(space_process) as espacio:
-         yield espacio
-         print('%s se le ha asignado espacio en memoria, pasara a estado ready. Utiliza %.2f de espacio' %(name, space_process))         
-         # si ya se obtuvo espacio entonces pasa a estado de ready
-    
-    # estado ready -> se solicita el cpu si puede atender este proceso
+    print('%s creado en %.2f con espacio de %.2f' %(name, tiempoInicio, space_process))
+    if space_process > ram.capacity:
+        print ('%s espera recibir espacio en memoria RAM en el momento %.2f' %(name, env.now))
+    else:
+        with ram.get(space_process) as nextStep:            
+            print('%s se le ha asignado espacio en memoria en %d, pasara a estado ready. Utiliza %.2f de espacio' %(name, env.now, space_process))         
+            yield env.process(ready(env, ram, cpu, name, nextStep.amount, inst_process, tiempo_instruccion, tiempoInicio))
+            # si ya se obtuvo espacio entonces pasa a estado de ready
+                 
+def ready(env, ram, cpu, name, space, inst_process, tiempo_instruccion, tiempoI):  
+    # estado ready -> se solicita el cpu si puede atender este proceso    
     with cpu.request() as estado:
-        yield estado
-        print('%s sera atendido por el CPU, pasara a estado running.' % name)
+        print(' %s sera atendido por el CPU, pasara a estado running.' % name)
+        yield env.process(running(env, ram, name, space, inst_process, tiempo_instruccion, tiempoI))        
         # puede cambiar a estado de running
         # solo ejecutara tiempo_instruccion
         # se debe de disminuir las instrucciones
         
+def running(env, ram, name, space_process, inst_process, tiempo_instruccion, tiempoI):    
+    terminated = False # se supone aun no ha terminado las instrucciones
+    siWaiting = random.randint(1,2)
+    while terminated==False:            
         inst_process -= tiempo_instruccion
-        siWaiting = random.randint(1,2)
-        yield  env.timeout(siWaiting)
+        yield env.timeout(1) # aumenta en 1 por cada instruccion generada
+        
+        
+        if inst_process > tiempo_instruccion:
+            if siWaiting==1:
+                print("  %s hace operacion I/O en %d" % (name, env.now))
+                yield env.timeout(1)
+        else:
+            terminated = True # ha terminado de realizar los procesos pertinentes
     
     # finalizando el proceso
-    ram.put(space_process)
-    tiempoTotal = env.now - tiempoInicio
+    ram.put(space_process)    
+    tiempoTotal = env.now - tiempoI
+    print("   %s FINALIZADO. Ha tomado %.2f ejecutarlo" %(name, tiempoTotal))
     totalTiempoProcesos.append(tiempoTotal)
-    print("Ha tomado %.2f hacer el proceso %s" %(tiempoTotal, name))
+    
     
 # FUNCIONAMIENTO DEL PROGRAMA
 """VARIABLES"""  
