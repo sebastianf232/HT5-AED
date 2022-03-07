@@ -4,11 +4,11 @@ import random      # numeros random
 import numpy as np # servirá para sacar la desviación estándar 
 
 """VARIABLES ARBITRARIAS"""
-ramCapacity = 10  # cantidad de espacio
+ramCapacity = 100  # cantidad de espacio
 cpuCapacity = 1
-processes = 5  # fijar cantidad de procesos, deben de ser 25,50,100,150 y 200
+processes = 25  # fijar cantidad de procesos, deben de ser 25,50,100,150 y 200
 instCPU = 3     # puede cambiar a 3, 5 o 6
-
+intervaloRandom = 1 # para hacer los intervalos de 10, 5 y 1
 """-----------------MÉTODOS------------------"""
 """ hace la simulacion de una memoria RAM
     recibe como parametros:
@@ -30,12 +30,14 @@ def memory(env, ram, cpu, name, space_process, inst_process, tiempo_instruccion)
     else:
         with ram.get(space_process) as nextStep:            
             print('%s se le ha asignado espacio en memoria en %d, pasara a estado ready. Utiliza %.2f de espacio' %(name, env.now, space_process))         
+            yield nextStep
             yield env.process(ready(env, ram, cpu, name, nextStep.amount, inst_process, tiempo_instruccion, tiempoInicio))
             # si ya se obtuvo espacio entonces pasa a estado de ready
                  
 def ready(env, ram, cpu, name, space, inst_process, tiempo_instruccion, tiempoI):  
     # estado ready -> se solicita el cpu si puede atender este proceso    
     with cpu.request() as estado:
+        yield estado
         print(' %s sera atendido por el CPU, pasara a estado running.' % name)
         yield env.process(running(env, ram, name, space, inst_process, tiempo_instruccion, tiempoI))        
         # puede cambiar a estado de running
@@ -74,8 +76,8 @@ totalTiempoProcesos = [] # se guardan los datos
 
 # realización de procesos
 for i in range(processes): #aquí se coloca la cantidad de procesos
-    newProceso = random.expovariate(1.0/10) # espacio en memoria entre 1 y 10 de cantidad a solicitar
-    cantInstrucciones = random.expovariate(1.0/10) # instrucciones entre 1 y 10 de cantidad a solicitar
+    newProceso = random.expovariate(1.0/intervaloRandom) # espacio en memoria entre 1 y 10 de cantidad a solicitar
+    cantInstrucciones = random.expovariate(1.0/intervaloRandom) # instrucciones entre 1 y 10 de cantidad a solicitar
     env.process(memory(env,RAM, CPU, 'Proceso %d' %i, newProceso, cantInstrucciones, instCPU)) # se realiza el proceso                                                                                         # el 3 es porque realiza tres instrucciones, este número puede variar
 env.run() 
 
