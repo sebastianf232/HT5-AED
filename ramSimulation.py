@@ -46,12 +46,12 @@ def ready(env, ram, cpu, name, space, inst_process, tiempo_instruccion, tiempoI)
         
 def running(env, ram, name, space_process, inst_process, tiempo_instruccion, tiempoI):    
     terminated = False # se supone aun no ha terminado las instrucciones
-    siWaiting = random.randint(1,2)
+    
     while terminated==False:            
         inst_process -= tiempo_instruccion
+        siWaiting = random.randint(1,2)
         yield env.timeout(1) # aumenta en 1 por cada instruccion generada
-        
-        
+                
         if inst_process > tiempo_instruccion:
             if siWaiting==1:
                 print("  %s hace operacion I/O en %d" % (name, env.now))
